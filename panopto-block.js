@@ -59,36 +59,38 @@ wp.blocks.registerBlockType('brad/border-box', {
                 )
             ): ( // after they click submit, remove the form elements and render the iframe inside the block.
             // note: the user must delete the block and re-add it if they want to embed a different playlist.
-                (props.attributes.playlistID && props.attributes.submitted) ? // only create the iframe if playlistID is defined and form is submitted
-                    (
-                        React.createElement(
-                            "iframe",
-                            {
-                                src: "https://ucf.hosted.panopto.com/Panopto/Pages/Embed.aspx?pid=" + props.attributes.playlistID + "&v=1",
-                                width: 720,
-                                height: 405,
-                                frameborder: 0,
-                                allowfullscreen: true,
-                                allow: 'autoplay'
-                            }
-                        )
-                    ) : ( null )
+                React.createElement(
+                    "iframe",
+                    {
+                        src: "https://ucf.hosted.panopto.com/Panopto/Pages/Embed.aspx?pid=" + props.attributes.playlistID + "&v=1",
+                        width: 720,
+                        height: 405,
+                        frameborder: 0,
+                        allowfullscreen: true,
+                        allow: 'autoplay'
+                    }
+                )
             )
         )
     },
 
     save: function(props) {
-        return wp.element.createElement(
-            "iframe",
-            {
-                src: "https://ucf.hosted.panopto.com/Panopto/Pages/Embed.aspx?pid=" + props.attributes.playlistID + "&v=1",
-                width: 720,
-                height: 405,
-                frameborder: 0,
-                allowfullscreen: true,
-                allow: 'autoplay'
-            }
-        )
+        return (props.attributes.playlistID && props.attributes.submitted) ? // only create the iframe if playlistID is defined and form is submitted
+            (
+                React.createElement(
+                    "iframe",
+                    {
+                        src: "https://ucf.hosted.panopto.com/Panopto/Pages/Embed.aspx?pid=" + props.attributes.playlistID + "&v=1",
+                        width: 720,
+                        height: 405,
+                        frameborder: 0,
+                        allowfullscreen: true,
+                        allow: 'autoplay'
+                    }
+                )
+            ) : (
+                null
+            )
     }
 
 });
