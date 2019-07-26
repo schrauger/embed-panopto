@@ -52,7 +52,8 @@ wp.blocks.registerBlockType('brad/border-box', {
                         "input",
                         {
                             type: "submit",
-                            value: "Embed"
+                            value: "Embed",
+                            className: "components-button is-button is-default is-large"
                         }
                     ),
                 )
