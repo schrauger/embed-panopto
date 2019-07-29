@@ -4,7 +4,7 @@
 Plugin Name: Panopto Playlist Embed
 Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
 Description: WordPress Block for embedding Panopto playlists.
-Version: 1.5
+Version: 1.5.1
 Author: Stephen Schrauger
 Author URI: https://github.com/schrauger/wp-panopto-embed
 License: A "Slug" license name e.g. GPL2
@@ -44,13 +44,13 @@ function loadPanoptoBlock() {
 function renderPanoptoCallback($attributes, $content){
 	return "
 		<iframe 
-			src='https://ucf.hosted.panopto.com/Panopto/Pages/Embed.aspx?pid={$attributes['playlistID']}&v=1',
-			width: 720,
-            height: 405,
-            frameborder: 0,
-            allowfullscreen: true,
-            allow: 'autoplay'
-		/>
+			src='https://ucf.hosted.panopto.com/Panopto/Pages/Embed.aspx?pid={$attributes['playlistID']}&v=1'
+			width='720'
+            height='405'
+            frameborder='0'
+            allowfullscreen='true'
+            allow='autoplay'
+		></iframe>
 	";
 }
 
