@@ -10,74 +10,90 @@ Author URI: https://github.com/schrauger/wp-panopto-embed
 License: A "Slug" license name e.g. GPL2
 */
 
-add_action('init', 'loadPanoptoBlock');
+add_action('init', array('PanoptoBlock','loadPanoptoBlock'));
 
-/**
- * register the react script for a block, and also define
- * the server side render callback to allow for raw html.
- */
-function loadPanoptoBlock() {
+class PanoptoBlock {
+	/**
+	 * register the react script for a block, and also define
+	 * the server side render callback to allow for raw html.
+	 */
+	static function loadPanoptoBlock() {
 
-	wp_register_script(
-		'panopto-block',
-		plugins_url('panopto-block.js', __FILE__),
-		array('wp-blocks','wp-editor','wp-data')
+		wp_register_script(
+			'panopto-block',
+			plugins_url('panopto-block.js', __FILE__),
+			array('wp-blocks','wp-editor','wp-data')
 		//filemtime(plugin_dir_path(__FILE__) . 'panopto-block.js')
-	);
+		);
 
-	register_block_type(
-		'panopto-embed/panopto-block', array(
-			'editor_script' => 'panopto-block',
-			'render_callback' => 'renderPanoptoCallback' // lets us do server-side rendering
-		)
-	);
-}
-
-/**
- * Overwrites the client side 'save' method with our own data. This allows us to print out raw html without
- * filtering it based on user permissions, so we can embed an iframe.
- * @param $attributes // input elements from the client
- * @param $content // post-filtered html from the client-side 'save' method. we don't use it here, instead we create our own html.
- *
- * @return string // like shortcode callbacks, this is the html that we render in place of the block.
- */
-function renderPanoptoCallback($attributes, $content){
-	$u_mediaID = $attributes['mediaID'];
-	$u_subdomain = $attributes['subdomain'];
-
-	// only allow a-f, 0-9, dash
-	$mediaID = preg_replace("/[^a-fA-F0-9-]+/", "", $u_mediaID);
-
-	// only allow a-z, 0-9, dash, and period
-	$subdomain  = preg_replace("/[^a-zA-Z0-9-.]+/", "", $u_subdomain);
-
-	// if sudomain is set and doesn't end in a period, add a period at the end
-	if ($subdomain && (substr($subdomain, -1) != '.')){
-		$subdomain = $subdomain . + '.';
+		register_block_type(
+			'panopto-embed/panopto-block', array(
+				                             'editor_script' => 'panopto-block',
+				                             'render_callback' => array('PanoptoBlock','renderPanoptoCallback') // lets us do server-side rendering
+			                             )
+		);
 	}
 
-	$url = "https://{$subdomain}panopto.com/Panopto/Pages/Embed.aspx";
-	if ($attributes['isPlaylist'] == true) {
-		$url .= "?id={$mediaID}&v=1";
-	} else {
-		$url .= "?pid={$mediaID}&v=1";
+	/**
+	 * Overwrites the client side 'save' method with our own data. This allows us to print out raw html without
+	 * filtering it based on user permissions, so we can embed an iframe.
+	 * @param $attributes // input elements from the client
+	 * @param $content // post-filtered html from the client-side 'save' method. we don't use it here, instead we create our own html.
+	 *
+	 * @return string // like shortcode callbacks, this is the html that we render in place of the block.
+	 */
+	static function renderPanoptoCallback($attributes, $content){
+		$u_url = $attributes['url']; // unsafe user input
 
+		$url = parse_url($u_url);
+
+		$viewer = "/panopto/pages/viewer.aspx";
+		// if user pasted in a video with viewer.aspx, rewrite it with embed.aspx
+		if (self::startsWith(strtolower($url['path']), $viewer)){
+			$url['path'] = "/Panopto/pages/embed.aspx" + substr($url['path'], sizeof($viewer)); // combine embed plus the part of the user url after viewer.aspx
+			// note: Panopto must be capitalized. otherwise, it redirects which messes up our check.
+		}
+
+		if (($url)
+		    && (self::endsWith(strtolower($url['host']), "panopto.com"))
+		    && (self::startsWith(strtolower($url['path']), "/panopto/pages/embed.aspx"))){
+
+			$s_url = esc_attr($u_url);
+			return "
+				<iframe 
+					src='{$s_url}'
+					width='720'
+		            height='405'
+		            frameborder='0'
+		            allowfullscreen='true'
+		            allow='autoplay'
+				></iframe>
+			";
+		}
+		return null;
 	}
 
+	// startsWith and endsWith code copied from https://stackoverflow.com/a/834355/306937
+	static function startsWith($haystack, $needle)
+	{
+		$length = strlen($needle);
+		return (substr($haystack, 0, $length) === $needle);
+	}
 
-	return "
-		<iframe 
-			src='{$url}'
-			width='720'
-            height='405'
-            frameborder='0'
-            allowfullscreen='true'
-            allow='autoplay'
-		></iframe>
-	";
+	static function endsWith($haystack, $needle)
+	{
+		$length = strlen($needle);
+		if ($length == 0) {
+			return true;
+		}
+
+		return (substr($haystack, -$length) === $needle);
+	}
 }
+
+
 
 // have to use init hook, since there is server-side rendering
 // can't just use enqueue_block_editor_assets hook, since an editor-only return is client side rendered html, which is
 // subject to html filtering (and would remove the iframe for less privileged users)
-//add_action('enqueue_block_editor_assets', 'loadPanoptoBlock');
+//add_action('enqueue_block_editor_assets', array('PanoptoBlock','loadPanoptoBlock'));

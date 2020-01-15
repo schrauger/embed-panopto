@@ -8,80 +8,64 @@ registerBlockType('panopto-embed/panopto-block', {
     icon: 'playlist-video',
     category: 'embed',
     attributes: {
-        mediaID: {type: 'string', default: ""},
-        submitted: {type: 'boolean', default: false },
-        subdomain: {type: 'string', default: "" },
+        submitted: {type: 'string', default: "" }, // value can be "", checking, invalid, or valid
         url: {type: 'string', default: "" },
-        isPlaylist: {type: 'boolean', default: false}
     },
 
     edit: function(props) {
 
+        function updateUrl(event) {
+            props.setAttributes({
+                url: event.target.value,
+                submitted: (props.attributes.submitted === 'valid') ? "": props.attributes.submitted // if marked as valid, remove that status since user put in a new url
+            });
+        }
+
+        function isUrlValid(u_url) {
+            let url = new URL(u_url);
+            let valid = true;
+
+            // hostname must be a subdomain of panopto.com
+            if (!(url.hostname.toLowerCase().endsWith("panopto.com"))){
+                valid = false;
+            }
+            const viewer = "/panopto/pages/viewer.aspx";
+            // if user pasted in a video with viewer.aspx, rewrite it with embed.aspx
+            if (url.pathname.toLowerCase().startsWith(viewer)){
+                url.pathname = "/Panopto/pages/embed.aspx" + url.pathname.slice(viewer.length); // combine embed plus the part of the user url after viewer.aspx
+                // note: Panopto must be capitalized. otherwise, it redirects which messes up our check.
+                props.setAttributes({
+                    url: url.toString()
+                })
+            } else if (!(url.pathname.toLowerCase().startsWith("/panopto/pages/embed.aspx"))){
+                valid = false;
+            }
+
+            return valid;
+        }
+
         /**
-         * Save playlist id in state. Unset the submitted flag.
-         * @param event
+         * Sends an HTTP request to the specified url. If it exists and returns a 200 code,
+         * set the status to valid.
+         * @param url
          */
-        function updateMediaID(event) {
-            let mediaID = event.target.value;
-
-            mediaID = mediaID.replace(/[^a-f0-9-]/gi, '');
-            props.setAttributes({
-                mediaID: mediaID,
-                submitted: false // if the user edits the pid, unsubmit it - that way, they can edit it and not constantly see render errors
-            });
-            updateUrl({mediaID: mediaID});
-        }
-
-        function updateSubdomain(event) {
-            let subdomain = event.target.value;
-
-            subdomain = subdomain.replace(/[^a-z0-9-.]/gi, '');
-            props.setAttributes({
-                subdomain: subdomain,
-                submitted: false
-            });
-            updateUrl({subdomain: subdomain});
-        }
-
-        function updateUrl(url_parts) {
-            let subdomain = props.attributes.subdomain;
-            if (typeof url_parts.subdomain !== 'undefined') {
-                subdomain = url_parts.subdomain
-            }
-            if (subdomain && (subdomain.slice(-1) !== '.')) {
-                subdomain += '.';
-            }
-
-            let mediaID = props.attributes.mediaID;
-            if (typeof url_parts.mediaID !== 'undefined') {
-                mediaID = url_parts.mediaID
-            }
-
-            let isPlaylist = props.attributes.isPlaylist;
-            if (typeof url_parts.isPlaylist !== 'undefined') {
-                isPlaylist = url_parts.isPlaylist
-            }
-
-            let $url = "https://" + subdomain + "panopto.com/Panopto/Pages/Embed.aspx";
-            if (isPlaylist === true) {
-                $url += "?pid=" + mediaID + "&v=1";
-            } else {
-                $url += "?id=" + mediaID + "&v=1";
-
-            }
-            props.setAttributes({
-                url: $url,
-            });
-
-
-        }
-
-        function updateIsPlaylist(toggle_value) {
-            console.log(toggle_value);
-            props.setAttributes({
-                isPlaylist: toggle_value
-            });
-            updateUrl({isPlaylist: toggle_value})
+        function isUrlExist(url){
+            let request = new XMLHttpRequest();
+            request.onreadystatechange = function() {
+                if (request.readyState === 4){
+                    if (request.status.toString().startsWith('2')) { //2XX code means page exists
+                        props.setAttributes({
+                            submitted: "valid"
+                        });
+                    } else {
+                        props.setAttributes({
+                            submitted: "invalid"
+                        });
+                    }
+                }
+            };
+            request.open("GET", url , true);
+            request.send(null);
         }
 
         /**
@@ -89,10 +73,14 @@ registerBlockType('panopto-embed/panopto-block', {
          * @param event
          */
         function formSubmit(event){
-            console.log('submitting');
             event.preventDefault(); // don't actually submit the form
-            if (props.attributes.mediaID){
-                props.setAttributes({submitted: true}) // rerender the attributes with the embed instead of the form
+            if (props.attributes.url){
+                if (isUrlValid(props.attributes.url)){
+                    props.setAttributes({submitted: "checking"});
+                    isUrlExist(props.attributes.url);
+                } else {
+                    props.setAttributes({submitted: "invalid"});
+                }
             }
         }
 
@@ -109,74 +97,42 @@ registerBlockType('panopto-embed/panopto-block', {
                     "Panopto Media Embed"
                 ),
                 React.createElement(
-                    "span",
-                    null,
-                    props.attributes.url,
-                ),
-                React.createElement(
-                    "hr",
-                    null,
-                    null,
-                ),
-                React.createElement(
-                    "div",
-                    null,
-                    React.createElement(
-                        "label",
-                        {
-                            for: 'subdomain'
-                        },
-                        "Subdomain"
-                    ),
-                    React.createElement(
-                        "input",
-                        {
-                            type: "string",
-                            value: props.attributes.subdomain,
-                            onChange: updateSubdomain,
-                            name: "panoptoSubdomain"
-                        }
-                    ),
-                ),
-                React.createElement(
-                    "div",
-                    null,
-                    React.createElement(
-                        "label",
-                        {
-                            for: 'panoptoMediaID'
-                        },
-                        "Media ID"
-                    ),
-                    React.createElement(
-                        "input",
-                        {
-                            type: "string",
-                            value: props.attributes.mediaID,
-                            onChange: updateMediaID,
-                            name: "panoptoMediaID"
-                        }
-                    ),
-                ),
-                React.createElement(
-                    ToggleControl,
+                    "input",
                     {
-                        label: (props.attributes.isPlaylist ? 'Playlist' : 'Video'),
-                        checked: props.attributes.isPlaylist,
-                        onChange: updateIsPlaylist,
-                        help: props.attributes.isPlaylist ? 'Media type: Playlist' : 'Media type: Video'
+                        type: "string",
+                        value: props.attributes.url,
+                        onChange: updateUrl,
+                        name: "panoptoUrl"
                     }
                 ),
+                ((props.attributes.submitted === "checking") ?
+                    React.createElement(
+                        "span",
+                        {
+                            class: "checking"
+                        },
+                        "Checking url..."
+                    )
+                    : ""),
+                ((props.attributes.submitted === "invalid") ?
+                    React.createElement(
+                        "span",
+                        {
+                            class: "error"
+                        },
+                        "Invalid url. Please enter a valid Panopto video or playlist embed url."
+                    )
+                    : ""),
                 React.createElement(
                     "input",
                     {
                         type: "submit",
                         value: "Embed",
                         className: "components-button is-button is-default is-large"
-                    }
+                    },
+                    null
                 ),
-
-                ((props.attributes.mediaID && props.attributes.submitted)) ? (// after they click submit, remove the form elements and render the iframe inside the block.
+                ((props.attributes.url && props.attributes.submitted === "valid")) ? (// after they click submit, remove the form elements and render the iframe inside the block.
                 // note: the user must delete the block and re-add it if they want to embed a different playlist.
                     React.createElement(
                         "div",
@@ -198,7 +154,7 @@ registerBlockType('panopto-embed/panopto-block', {
                     React.createElement(
                         "div",
                         null,
-                        "Enter a media ID and click embed"
+                        "Enter a panopto video embed URL"
                     )
                 )
             )
