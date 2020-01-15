@@ -1,10 +1,10 @@
 <?php
 
 /*
-Plugin Name: Panopto Playlist Embed
+Plugin Name: Panopto Media Embed
 Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
-Description: WordPress Block for embedding Panopto playlists.
-Version: 1.5.1
+Description: WordPress Block for embedding Panopto videos and playlists.
+Version: 2.0
 Author: Stephen Schrauger
 Author URI: https://github.com/schrauger/wp-panopto-embed
 License: A "Slug" license name e.g. GPL2
@@ -42,9 +42,32 @@ function loadPanoptoBlock() {
  * @return string // like shortcode callbacks, this is the html that we render in place of the block.
  */
 function renderPanoptoCallback($attributes, $content){
+	$u_mediaID = $attributes['mediaID'];
+	$u_subdomain = $attributes['subdomain'];
+
+	// only allow a-f, 0-9, dash
+	$mediaID = preg_replace("/[^a-fA-F0-9-]+/", "", $u_mediaID);
+
+	// only allow a-z, 0-9, dash, and period
+	$subdomain  = preg_replace("/[^a-zA-Z0-9-.]+/", "", $u_subdomain);
+
+	// if sudomain is set and doesn't end in a period, add a period at the end
+	if ($subdomain && (substr($subdomain, -1) != '.')){
+		$subdomain = $subdomain . + '.';
+	}
+
+	$url = "https://{$subdomain}panopto.com/Panopto/Pages/Embed.aspx";
+	if ($attributes['isPlaylist'] == true) {
+		$url .= "?id={$mediaID}&v=1";
+	} else {
+		$url .= "?pid={$mediaID}&v=1";
+
+	}
+
+
 	return "
 		<iframe 
-			src='https://ucf.hosted.panopto.com/Panopto/Pages/Embed.aspx?pid={$attributes['playlistID']}&v=1'
+			src='{$url}'
 			width='720'
             height='405'
             frameborder='0'
