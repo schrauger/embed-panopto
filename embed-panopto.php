@@ -4,7 +4,7 @@
 Plugin Name: Embed Panopto
 Plugin URI: https://github.com/schrauger/embed-panopto
 Description: WordPress Block for embedding Panopto videos and playlists.
-Version: 2.2.0
+Version: 2.2.1
 Author: Stephen Schrauger
 Author URI: https://schrauger.com
 License: GPLv3
