@@ -55,3 +55,13 @@ Not within the block itself. The iframe is generated within a div and a class `p
 
 2.2.1
 * New name and license
+
+== Third Party Notice ==
+
+This plugin relies on the services provided by Panopto.com. Anytime the plugin is used to embed a video from Panopto, their embed code is loaded onto your page. Any analytics, tracking, or other code loaded in the iframe is controlled by Panopto, not the developer of this plugin.
+
+* Panopto: https://www.panopto.com/
+* Panopto terms of service: https://www.panopto.com/terms-of-service/
+
+
+
