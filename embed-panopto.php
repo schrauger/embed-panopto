@@ -1,10 +1,10 @@
 <?php
 
 /*
-Plugin Name: Panopto Media Embed
-Plugin URI: https://github.com/schrauger/panopto-embed
+Plugin Name: Embed Panopto
+Plugin URI: https://github.com/schrauger/embed-panopto
 Description: WordPress Block for embedding Panopto videos and playlists.
-Version: 2.0
+Version: 2.1
 Author: Stephen Schrauger
 Author URI: https://schrauger.com
 License: GPL2
@@ -20,15 +20,15 @@ class PanoptoBlock {
 	static function loadPanoptoBlock() {
 
 		wp_register_script(
-			'panopto-block',
-			plugins_url('panopto-block.js', __FILE__),
+			'block-panopto',
+			plugins_url('block-panopto.js', __FILE__),
 			array('wp-blocks','wp-editor','wp-data')
-		//filemtime(plugin_dir_path(__FILE__) . 'panopto-block.js')
+		//filemtime(plugin_dir_path(__FILE__) . 'block-panopto.js')
 		);
 
 		register_block_type(
-			'panopto-embed/panopto-block', array(
-				                             'editor_script' => 'panopto-block',
+			'embed-panopto/block-panopto', array(
+				                             'editor_script' => 'block-panopto',
 				                             'render_callback' => array('PanoptoBlock','renderPanoptoCallback') // lets us do server-side rendering
 			                             )
 		);

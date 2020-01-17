@@ -3,7 +3,7 @@ const {
     ToggleControl,
 } = wp.components; //Block inspector wrapper
 
-registerBlockType('panopto-embed/panopto-block', {
+registerBlockType('embed-panopto/block-panopto', {
     title: 'Panopto Media',
     icon: 'playlist-video',
     category: 'embed',
