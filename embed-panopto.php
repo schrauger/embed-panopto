@@ -60,14 +60,16 @@ class PanoptoBlock {
 
 			$s_url = esc_attr($u_url);
 			return "
-				<iframe 
-					src='{$s_url}'
-					width='720'
-		            height='405'
-		            frameborder='0'
-		            allowfullscreen='true'
-		            allow='autoplay'
-				></iframe>
+				<div class='panopto-iframe'>
+					<iframe 
+						src='{$s_url}'
+						width='720'
+			            height='405'
+			            frameborder='0'
+			            allowfullscreen='true'
+			            allow='autoplay'
+					></iframe>
+				</div>
 			";
 		}
 		return null;
