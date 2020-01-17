@@ -1,12 +1,7 @@
-# wp-panopto-embed
+# embed-panopto
 WordPress Block for embedding Panopto playlists
 
 ## Description
-Adds a WordPress Block for embedding video playlists from Panopto. You provide the Playlist ID (pid), and it will embed an iframe pointing to uc.hosted.panopto.com.
+Adds a WordPress Block for embedding video playlists from Panopto. You provide the video or playlist url, and it will embed an iframe pointing to the video.
 
-As of version 1.2, you can only embed video playlists, not individual videos. Also, it only works on the ucf.hosted.panopto.com domain.
-
-## Future development
-* Allow other domains (perhaps a site setting, or maybe just another option for each block embed)
-* Allow individual videos (editor toggle between playlist and video mode?)
-* Auto-parse a panopto url and extract the PID (or other params) directly, rather than require the user to get the string
+It utilizes server-side rendering, so it will work even for standard users who are prohibited from embedding iframes. The code verifies that the url is a video on panopto.com, preventing other iframe urls from being injected onto the page.
